@@ -1,0 +1,1 @@
+Celebrai database schema migrations. Run from the backend directory with the backend environment active: alembic upgrade head.

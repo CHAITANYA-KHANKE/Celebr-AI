@@ -1,0 +1,134 @@
+import type { EventBrief, Plan, PlanTask, VendorItem } from '../types'
+
+const normalize = (value: string) => value.trim().toLocaleLowerCase()
+
+function allocationAlias(category: string, event: EventBrief): string {
+  const key = normalize(category)
+  if (key === 'music & activities') return 'music & entertainment'
+  if (key === 'food & drink') {
+    if (event.category === 'Birthday') return 'food, cake & drinks'
+    if (event.category === 'Community event') return 'food & refreshments'
+  }
+  return key
+}
+
+function rebalanceRows(rows: Plan['budget']['allocations'], total: number) {
+  const cents = Math.round(total * 100)
+  const rawSum = rows.reduce((sum, row) => sum + row.planned, 0)
+  let usedCents = 0
+  return rows.map((row, index) => {
+    const plannedCents =
+      index === rows.length - 1
+        ? cents - usedCents
+        : rawSum > 0
+          ? Math.round((row.planned / rawSum) * cents)
+          : Math.floor(cents / rows.length)
+    usedCents += plannedCents
+    return { ...row, planned: plannedCents / 100 }
+  })
+}
+
+function mergeAllocations(current: Plan, generated: Plan, event: EventBrief) {
+  const oldByCategory = new Map<string, Plan['budget']['allocations'][number]>()
+  for (const row of current.budget.allocations) {
+    const key = allocationAlias(row.category, event)
+    if (!oldByCategory.has(key)) oldByCategory.set(key, row)
+  }
+  const matchedKeys = new Set<string>()
+  const defaults = generated.budget.allocations.map((row) => {
+    const key = normalize(row.category)
+    const old = oldByCategory.get(key)
+    if (old) matchedKeys.add(key)
+    return old ? { ...row, actual: old.actual } : row
+  })
+  const customRows = current.budget.allocations.filter((row) => {
+    const key = allocationAlias(row.category, event)
+    return (
+      !matchedKeys.has(key) &&
+      !generated.budget.allocations.some((item) => normalize(item.category) === key)
+    )
+  })
+  return rebalanceRows([...defaults, ...customRows], event.budget)
+}
+
+function mergeTasks(
+  current: Plan,
+  generated: Plan,
+  previousEventDate: string,
+  nextEventDate: string,
+): PlanTask[] {
+  const oldByTitle = new Map(current.tasks.map((task) => [normalize(task.title), task]))
+  const oldIdToNewId = new Map<string, string>()
+  const regenerated = generated.tasks.map((task) => {
+    const old = oldByTitle.get(normalize(task.title))
+    if (old) oldIdToNewId.set(old.id, task.id)
+    return old ? { ...task, status: old.status } : task
+  })
+  const [oldYear, oldMonth, oldDay] = previousEventDate.split('-').map(Number)
+  const [newYear, newMonth, newDay] = nextEventDate.split('-').map(Number)
+  const dayDelta = Math.round(
+    (Date.UTC(newYear, newMonth - 1, newDay) - Date.UTC(oldYear, oldMonth - 1, oldDay)) / 86_400_000,
+  )
+  const generatedTitles = new Set(generated.tasks.map((task) => normalize(task.title)))
+  const custom = current.tasks
+    .filter((task) => !generatedTitles.has(normalize(task.title)))
+    .map((task) => {
+      const [year, month, day] = task.due_date.split('-').map(Number)
+      const shiftedDate = new Date(Date.UTC(year, month - 1, day + dayDelta)).toISOString().slice(0, 10)
+      return {
+        ...task,
+        due_date: shiftedDate > nextEventDate ? nextEventDate : shiftedDate,
+        depends_on: (task.depends_on ?? []).map((id) => oldIdToNewId.get(id) ?? id),
+      }
+    })
+  // Keep custom task dependencies only when the referenced task also remains in the adapted plan.
+  const validIds = new Set([...regenerated, ...custom].map((task) => task.id))
+  return [...regenerated, ...custom].map((task) => ({
+    ...task,
+    depends_on: task.depends_on.filter((id) => validIds.has(id) && id !== task.id),
+  }))
+}
+
+function mergeVendors(current: Plan, generated: Plan): VendorItem[] {
+  const previous = current.vendors.map((vendor) => ({ ...vendor, used: false }))
+  const adapted = generated.vendors.map((vendor) => {
+    const match = previous.find(
+      (old) =>
+        !old.used &&
+        normalize(old.category) === normalize(vendor.category) &&
+        normalize(old.service) === normalize(vendor.service),
+    )
+    if (!match) return vendor
+    match.used = true
+    return {
+      ...vendor,
+      id: match.id,
+      name: match.name,
+      contact: match.contact,
+      estimate: match.estimate,
+      coverage_guests: match.coverage_guests ?? null,
+      included_items: match.included_items ?? '',
+      extra_charges: match.extra_charges ?? '',
+      status: match.status,
+      notes: match.notes,
+    }
+  })
+  const additionalQuotes = previous
+    .filter((vendor) => !vendor.used)
+    .map(({ used: _used, ...vendor }) => vendor)
+  return [...adapted, ...additionalQuotes]
+}
+
+export function mergeAdaptedPlan(
+  current: Plan,
+  generated: Plan,
+  event: EventBrief,
+  previousEventDate = event.event_date,
+): Plan {
+  return {
+    ...generated,
+    budget: { total: event.budget, allocations: mergeAllocations(current, generated, event) },
+    tasks: mergeTasks(current, generated, previousEventDate, event.event_date),
+    vendors: mergeVendors(current, generated),
+  }
+}
