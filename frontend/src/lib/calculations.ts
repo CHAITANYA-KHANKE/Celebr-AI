@@ -1,6 +1,24 @@
 import type { Allocation } from '../types'
 
-export function budgetSummary(total: number, allocations: Allocation[]) {
+export interface BudgetSummaryResult {
+  allocated: number
+  actual: number
+  remaining: number
+  utilization: number
+  unallocated: number
+  overallocated: number
+  overspent: boolean
+}
+
+/**
+ * Calculates deterministic budget balance, utilization percentage,
+ * and overspend thresholds for an event plan.
+ *
+ * @param total Total entered budget for the event
+ * @param allocations List of category allocations with planned and actual spend
+ * @returns Structured budget summary with allocated, actual, remaining, and alert flags
+ */
+export function budgetSummary(total: number, allocations: Allocation[]): BudgetSummaryResult {
   const allocated = allocations.reduce((sum, item) => sum + Math.max(0, Number(item.planned) || 0), 0)
   const actual = allocations.reduce((sum, item) => sum + Math.max(0, Number(item.actual) || 0), 0)
   const remaining = total - actual
@@ -14,3 +32,4 @@ export function budgetSummary(total: number, allocations: Allocation[]) {
     overspent: remaining < 0,
   }
 }
+

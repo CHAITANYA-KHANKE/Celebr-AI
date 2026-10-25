@@ -2,10 +2,18 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from enum import Enum
+import re
 from typing import Annotated
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+_DANGEROUS_PATTERNS = re.compile(
+    r"(?i)(<script[\s\S]*?>[\s\S]*?<\/script>|<script[\s\S]*?>|javascript:|\bon\w+\s*=|<iframe[\s\S]*?>[\s\S]*?<\/iframe>)",
+)
+_PROMPT_INJECTION_PATTERNS = re.compile(
+    r"(?i)\b(ignore\s+(?:all\s+)?(?:previous|prior)\s+instructions|system\s+override|override\s+system\s+prompt)\b",
+)
 
 
 class EventCategory(str, Enum):
@@ -89,6 +97,25 @@ class EventBrief(StrictModel):
         if self.children_count + self.older_adult_count > self.guest_count:
             raise ValueError("Children and older adult counts cannot exceed the guest count.")
         return self
+
+    @field_validator(
+        "name",
+        "location",
+        "theme_preference",
+        "preferences",
+        "dietary_needs",
+        "accessibility_needs",
+        "venue_constraints",
+        mode="before",
+    )
+    @classmethod
+    def sanitize_input_strings(cls, value: str) -> str:
+        if isinstance(value, str):
+            cleaned = value.replace("\x00", "")
+            cleaned = _DANGEROUS_PATTERNS.sub("", cleaned)
+            cleaned = _PROMPT_INJECTION_PATTERNS.sub("[sanitized]", cleaned)
+            return cleaned.strip()
+        return value
 
     @field_validator("name", "location")
     @classmethod

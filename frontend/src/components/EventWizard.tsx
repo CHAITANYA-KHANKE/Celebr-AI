@@ -286,9 +286,11 @@ export function EventWizard({ initial, onClose, onGenerate, onUpdate, editing }:
                   </p>
                 )}
                 <div className="field-grid">
-                  <label className="field full">
+                  <label htmlFor="wizard-name" className="field full">
                     <span>Event name</span>
                     <input
+                      id="wizard-name"
+                      aria-required="true"
                       value={form.name}
                       onChange={(e) => update('name', e.target.value)}
                       maxLength={100}
@@ -297,19 +299,23 @@ export function EventWizard({ initial, onClose, onGenerate, onUpdate, editing }:
                     />
                     <small>Something you'll recognize in your plans.</small>
                   </label>
-                  <label className="field">
+                  <label htmlFor="wizard-date" className="field">
                     <span>Event date</span>
                     <input
+                      id="wizard-date"
                       type="date"
+                      aria-required="true"
                       value={form.event_date}
                       min={minimumDate}
                       max={maximumDate}
                       onChange={(e) => update('event_date', e.target.value)}
                     />
                   </label>
-                  <label className="field">
+                  <label htmlFor="wizard-location" className="field">
                     <span>Where is it happening?</span>
                     <input
+                      id="wizard-location"
+                      aria-required="true"
                       value={form.location}
                       onChange={(e) => update('location', e.target.value)}
                       maxLength={120}
@@ -355,10 +361,12 @@ export function EventWizard({ initial, onClose, onGenerate, onUpdate, editing }:
                   </div>
                 </section>
                 <div className="field-grid">
-                  <label className="field">
+                  <label htmlFor="wizard-guests" className="field">
                     <span>Expected guests</span>
                     <div className="input-with-unit">
                       <input
+                        id="wizard-guests"
+                        aria-required="true"
                         type="number"
                         min="1"
                         max="100000"
@@ -372,10 +380,11 @@ export function EventWizard({ initial, onClose, onGenerate, onUpdate, editing }:
                     </div>
                     <small>Choose your best estimate for now.</small>
                   </label>
-                  <label className="field">
+                  <label htmlFor="wizard-budget" className="field">
                     <span>Total budget</span>
                     <div className="budget-input">
                       <select
+                        id="wizard-currency"
                         aria-label="Currency"
                         value={form.currency}
                         onChange={(e) => update('currency', e.target.value)}
@@ -387,6 +396,8 @@ export function EventWizard({ initial, onClose, onGenerate, onUpdate, editing }:
                         <option value="AED">د.إ AED</option>
                       </select>
                       <input
+                        id="wizard-budget"
+                        aria-required="true"
                         type="number"
                         min="1"
                         step="100"
@@ -398,11 +409,12 @@ export function EventWizard({ initial, onClose, onGenerate, onUpdate, editing }:
                     </div>
                     <small>We’ll keep estimates in this currency.</small>
                   </label>
-                  <label className="field full">
+                  <label htmlFor="wizard-theme" className="field full">
                     <span>
                       Theme or feeling <em>optional</em>
                     </span>
                     <input
+                      id="wizard-theme"
                       value={form.theme_preference}
                       onChange={(e) => update('theme_preference', e.target.value)}
                       maxLength={120}
@@ -410,11 +422,12 @@ export function EventWizard({ initial, onClose, onGenerate, onUpdate, editing }:
                     />
                     <small>Leave this blank to explore a few directions.</small>
                   </label>
-                  <label className="field full">
+                  <label htmlFor="wizard-preferences" className="field full">
                     <span>
                       What would make it feel like you? <em>optional</em>
                     </span>
                     <textarea
+                      id="wizard-preferences"
                       rows={3}
                       value={form.preferences}
                       onChange={(e) => update('preferences', e.target.value)}
@@ -504,11 +517,12 @@ export function EventWizard({ initial, onClose, onGenerate, onUpdate, editing }:
                   A few notes help us shape more inclusive, useful suggestions.
                 </p>
                 <div className="field-grid">
-                  <label className="field">
+                  <label htmlFor="wizard-children" className="field">
                     <span>
                       Children expected <em>optional</em>
                     </span>
                     <input
+                      id="wizard-children"
                       type="number"
                       min="0"
                       max={form.guest_count}
@@ -520,11 +534,12 @@ export function EventWizard({ initial, onClose, onGenerate, onUpdate, editing }:
                     />
                     <small>Approximate count; used for comfort and activity planning.</small>
                   </label>
-                  <label className="field">
+                  <label htmlFor="wizard-older-adults" className="field">
                     <span>
                       Older adults expected <em>optional</em>
                     </span>
                     <input
+                      id="wizard-older-adults"
                       type="number"
                       min="0"
                       max={form.guest_count}
@@ -536,11 +551,12 @@ export function EventWizard({ initial, onClose, onGenerate, onUpdate, editing }:
                     />
                     <small>Approximate count; not a guest list or demographic profile.</small>
                   </label>
-                  <label className="field full">
+                  <label htmlFor="wizard-venue" className="field full">
                     <span>
                       Venue constraints <em>optional</em>
                     </span>
                     <textarea
+                      id="wizard-venue"
                       rows={2}
                       value={form.venue_constraints}
                       onChange={(e) => update('venue_constraints', e.target.value)}
@@ -548,11 +564,12 @@ export function EventWizard({ initial, onClose, onGenerate, onUpdate, editing }:
                       placeholder="Capacity, noise curfew, outdoor/indoor limits, access, setup windows…"
                     />
                   </label>
-                  <label className="field full">
+                  <label htmlFor="wizard-dietary" className="field full">
                     <span>
                       Dietary needs <em>optional</em>
                     </span>
                     <textarea
+                      id="wizard-dietary"
                       rows={3}
                       value={form.dietary_needs}
                       onChange={(e) => update('dietary_needs', e.target.value)}
@@ -560,11 +577,12 @@ export function EventWizard({ initial, onClose, onGenerate, onUpdate, editing }:
                       placeholder="Allergies, vegetarian options, religious dietary preferences…"
                     />
                   </label>
-                  <label className="field full">
+                  <label htmlFor="wizard-accessibility" className="field full">
                     <span>
                       Accessibility or comfort needs <em>optional</em>
                     </span>
                     <textarea
+                      id="wizard-accessibility"
                       rows={3}
                       value={form.accessibility_needs}
                       onChange={(e) => update('accessibility_needs', e.target.value)}
@@ -574,7 +592,7 @@ export function EventWizard({ initial, onClose, onGenerate, onUpdate, editing }:
                   </label>
                 </div>
                 <div className="wizard-assumption">
-                  <span className="assumption-spark">✳</span>
+                  <span className="assumption-spark" aria-hidden="true">✳</span>
                   <span>
                     <strong>Your selected planner:</strong>{' '}
                     {plannerFocusOptions.find((option) => option.value === form.planner_focus)?.title}.
@@ -585,8 +603,9 @@ export function EventWizard({ initial, onClose, onGenerate, onUpdate, editing }:
                     Estimates are not quotes; providers are not verified.
                   </span>
                 </div>
-                <label className="sharing-consent">
+                <label htmlFor="wizard-consent" className="sharing-consent">
                   <input
+                    id="wizard-consent"
                     type="checkbox"
                     checked={shareConsent}
                     onChange={(e) => setShareConsent(e.target.checked)}
