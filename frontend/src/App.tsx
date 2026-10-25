@@ -9,6 +9,12 @@ import { readLocalEvents, writeLocalEvents } from './lib/storage'
 import { mergeAdaptedPlan } from './lib/adaptation'
 import type { EventBrief, EventRecord } from './types'
 
+/**
+ * Root application component orchestrating client view transitions, event management,
+ * offline synchronization with localStorage, and seamless GenAI/deterministic plan generation.
+ *
+ * @returns Top-level application layout with error boundary and accessibility regions.
+ */
 export default function App() {
   const [events, setEvents] = useState<EventRecord[]>([])
   const [current, setCurrent] = useState<EventRecord | null>(null)

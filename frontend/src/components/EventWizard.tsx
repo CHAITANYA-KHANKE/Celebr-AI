@@ -10,11 +10,19 @@ import {
 } from '../types'
 import { localDateString } from '../lib/format'
 
-interface EventWizardProps {
+/**
+ * Properties accepted by the multi-step EventWizard modal component.
+ */
+export interface EventWizardProps {
+  /** Optional pre-filled event parameters (used when cloning or editing). */
   initial?: Partial<EventBrief>
+  /** Callback invoked when the user dismisses the wizard modal. */
   onClose: () => void
+  /** Callback invoked to generate a new celebration plan. */
   onGenerate: (event: EventBrief) => Promise<void>
+  /** Optional callback invoked when updating an existing event record. */
   onUpdate?: (event: EventBrief) => Promise<void>
+  /** Existing event record reference when in edit mode. */
   editing?: EventRecord
 }
 
@@ -24,12 +32,20 @@ const categoryOptions: { value: EventCategory; title: string; sub: string; mark:
   { value: 'Community event', title: 'Community', sub: 'Better, together', mark: 'C' },
 ]
 
-function defaultDate() {
+/**
+ * Calculates a sensible default event date (60 days ahead) for the onboarding wizard.
+ * @returns Date string in YYYY-MM-DD format.
+ */
+function defaultDate(): string {
   const date = new Date()
   date.setDate(date.getDate() + 60)
   return localDateString(date)
 }
 
+/**
+ * Instantiates an empty, validated EventBrief data structure with default values.
+ * @returns Blank EventBrief instance.
+ */
 function blankEvent(): EventBrief {
   return {
     name: '',
@@ -52,6 +68,13 @@ function blankEvent(): EventBrief {
   }
 }
 
+/**
+ * Accessible, keyboard-navigable multi-step modal dialog for capturing celebration requirements,
+ * priorities, budget constraints, demographic mix, and AI specialist persona selection.
+ *
+ * @param props - EventWizardProps configuring callbacks and initial values.
+ * @returns Dialog modal element with step-by-step form controls.
+ */
 export function EventWizard({ initial, onClose, onGenerate, onUpdate, editing }: EventWizardProps) {
   const [form, setForm] = useState<EventBrief>({ ...blankEvent(), ...initial })
   const [step, setStep] = useState(0)

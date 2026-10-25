@@ -38,16 +38,29 @@ import { previewTaskDelay } from '../lib/task-shifts'
 import { proposePriorityCuts, projectedCost, simulateAllocationChange } from '../lib/tradeoffs'
 import { daysUntil, formatDate, formatMoney, initials, localDateString } from '../lib/format'
 
-interface WorkspaceProps {
+/**
+ * Properties accepted by the primary Workspace interactive dashboard.
+ */
+export interface WorkspaceProps {
+  /** The actively selected celebration event dossier. */
   event: EventRecord
+  /** Complete list of saved event records for fast switching. */
   events: EventRecord[]
+  /** Whether changes are currently syncing to the backend database. */
   isSaving: boolean
+  /** Dispatcher function for updating event plan properties (actuals, tasks, vendors). */
   onChange: (event: EventRecord, persist?: boolean) => void
+  /** Triggered to open the event parameter editing modal. */
   onEdit: () => void
+  /** Triggered to launch a new celebration planning wizard. */
   onNew: () => void
+  /** Triggered when the user switches to a different event dossier. */
   onSelectEvent: (event: EventRecord) => void
+  /** Triggered to navigate back to the landing view. */
   onHome: () => void
+  /** Exports the active event plan dossier in CSV or JSON format. */
   onExport: (format: 'csv' | 'json') => Promise<void>
+  /** Displays a transient toast notification to the user. */
   onToast: (message: string) => void
 }
 
@@ -73,12 +86,26 @@ const vendorCategories = [
   'Other',
 ]
 const today = localDateString(new Date())
+
+/**
+ * Parses and bounds a user-entered guest coverage count from a vendor quote.
+ * @param value - Raw input string value.
+ * @returns Bounded integer count or null if empty/invalid.
+ */
 const parseCoveredGuests = (value: string): number | null => {
   if (value === '') return null
   const parsed = Number(value)
   return Number.isFinite(parsed) ? Math.min(100_000, Math.max(1, Math.round(parsed))) : null
 }
 
+/**
+ * Primary celebration planning workspace dashboard.
+ * Houses the 6 dedicated modules: Overview, Budget Trade-offs, Cascading Timeline,
+ * Vendor Quote Comparison, Idea Studio, and Event Settings.
+ *
+ * @param props - WorkspaceProps configuring event data, mutators, and navigation.
+ * @returns Rendered accessible workspace interface.
+ */
 export function Workspace({
   event,
   events,

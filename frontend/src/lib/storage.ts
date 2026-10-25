@@ -2,6 +2,13 @@ import type { EventRecord } from '../types'
 
 const KEY = 'celebrai.events.v1'
 
+/**
+ * Validates and normalizes an untrusted raw JSON object into a conforming EventRecord structure.
+ * Ensures all required collections (priority_order, must_haves, tasks, vendors) are instantiated.
+ *
+ * @param value - Untrusted raw object read from browser storage.
+ * @returns A validated EventRecord instance, or null if essential fields are absent.
+ */
 function normalizeEvent(value: unknown): EventRecord | null {
   if (!value || typeof value !== 'object') return null
   const record = value as Partial<EventRecord>
@@ -27,6 +34,12 @@ function normalizeEvent(value: unknown): EventRecord | null {
   } as EventRecord
 }
 
+/**
+ * Retrieves persisted event dossiers from the browser's local storage.
+ * Safely recovers from empty states, private browsing limitations, and corrupted JSON.
+ *
+ * @returns Array of validated EventRecord entities.
+ */
 export function readLocalEvents(): EventRecord[] {
   try {
     const raw = localStorage.getItem(KEY)
@@ -40,6 +53,12 @@ export function readLocalEvents(): EventRecord[] {
   }
 }
 
+/**
+ * Persists an array of event dossiers to the browser's local storage.
+ * Caps stored records to the most recent 50 entries to safeguard client storage quotas.
+ *
+ * @param events - Array of EventRecord entities to serialize and persist.
+ */
 export function writeLocalEvents(events: EventRecord[]): void {
   try {
     localStorage.setItem(KEY, JSON.stringify(events.slice(0, 50)))

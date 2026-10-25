@@ -1,9 +1,16 @@
 import { ArrowDown, ArrowRight, CalendarDays, Check, Heart, Sparkles, WalletCards } from 'lucide-react'
 
-interface LandingPageProps {
+/**
+ * Properties for the LandingPage presentation component.
+ */
+export interface LandingPageProps {
+  /** Handler invoked when user initiates new plan wizard */
   onCreate: () => void
+  /** Handler invoked when user loads the pre-configured sample plan */
   onSample: () => void
+  /** Handler invoked when user opens the saved plans manager */
   onBrowse: () => void
+  /** Total count of persisted event plans */
   savedCount: number
 }
 
@@ -25,31 +32,35 @@ const pillars = [
   },
 ]
 
+/**
+ * CelebrAI primary landing and marketing showcase component.
+ * Features value pillars, interactive triggers, and WCAG AA accessible navigation.
+ */
 export function LandingPage({ onCreate, onSample, onBrowse, savedCount }: LandingPageProps) {
   return (
     <div className="landing-page">
-      <a className="skip-link" href="#main-content">
+      <a className="skip-link" href="#main-content" rel="noopener noreferrer">
         Skip to content
       </a>
       <header className="landing-nav">
-        <a className="brand" href="#top" aria-label="CelebrAI home">
+        <a className="brand" href="#top" aria-label="CelebrAI home" rel="noopener noreferrer">
           <span className="brand-mark">
-            <Sparkles size={18} />
+            <Sparkles size={18} aria-hidden="true" />
           </span>
           <span className="brand-text">
             Celebr<span className="brand-ai">AI</span>
           </span>
         </a>
         <nav aria-label="Main navigation" className="landing-links">
-          <a href="#how-it-works">How it works</a>
-          <a href="#made-for">Made for every gathering</a>
+          <a href="#how-it-works" rel="noopener noreferrer">How it works</a>
+          <a href="#made-for" rel="noopener noreferrer">Made for every gathering</a>
         </nav>
         <div className="nav-actions">
-          <button className="text-button saved-link" onClick={onBrowse}>
+          <button className="text-button saved-link" onClick={onBrowse} aria-label="View saved plans">
             {savedCount > 0 ? `Your plans · ${savedCount}` : 'Your plans'}
           </button>
-          <button className="button button-dark button-small" onClick={onCreate}>
-            Start planning <ArrowRight size={15} />
+          <button className="button button-dark button-small" onClick={onCreate} aria-label="Start planning">
+            Start planning <ArrowRight size={15} aria-hidden="true" />
           </button>
         </div>
       </header>
@@ -97,7 +108,13 @@ export function LandingPage({ onCreate, onSample, onBrowse, savedCount }: Landin
             role="img"
             aria-label="Warm, floral wedding table setting at golden hour"
           >
-            <div className="hero-photo" />
+            <img
+              src="/celebration-cover.jpg"
+              alt="Warm, floral wedding table setting at golden hour"
+              loading="lazy"
+              className="hero-photo"
+              style={{ objectFit: 'cover' }}
+            />
             <div className="photo-caption">
               <span className="caption-kicker">A little inspiration</span>
               <span>
@@ -160,7 +177,13 @@ export function LandingPage({ onCreate, onSample, onBrowse, savedCount }: Landin
 
         <section className="how-section" id="made-for">
           <div className="how-art">
-            <div className="how-image" />
+            <img
+              src="/celebration-cover.jpg"
+              alt="Thoughtfully planned celebration day"
+              loading="lazy"
+              className="how-image"
+              style={{ objectFit: 'cover' }}
+            />
             <div className="tiny-calendar">
               <span>YOUR DAY</span>
               <strong>
@@ -237,17 +260,17 @@ export function LandingPage({ onCreate, onSample, onBrowse, savedCount }: Landin
         </section>
       </main>
       <footer className="landing-footer">
-        <a className="brand" href="#top">
+        <a className="brand" href="#top" aria-label="CelebrAI home" rel="noopener noreferrer">
           <span className="brand-mark">
-            <Sparkles size={16} />
+            <Sparkles size={16} aria-hidden="true" />
           </span>
           <span className="brand-text">
             Celebr<span className="brand-ai">AI</span>
           </span>
         </a>
         <span>Thoughtful plans for meaningful moments.</span>
-        <a href="#top" className="back-top">
-          Back to top <ArrowDown size={13} />
+        <a href="#top" className="back-top" rel="noopener noreferrer" aria-label="Back to top">
+          Back to top <ArrowDown size={13} aria-hidden="true" />
         </a>
       </footer>
     </div>

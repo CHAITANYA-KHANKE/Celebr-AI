@@ -22,13 +22,15 @@ venv/
 
 # Environment and secrets - NEVER COMMIT SECRETS
 .env
-.env*
+.env.local
+.env.*.local
 *.env
-*.env*
-*.env.example
-.env.example
+*.env.*
 backend/.env
-backend/.env*
+backend/.env.local
+backend/.env.*
+!.env.example
+!backend/.env.example
 
 # Local SQLite databases
 backend/celebrai.db

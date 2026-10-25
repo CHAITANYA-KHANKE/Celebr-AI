@@ -1,7 +1,19 @@
 import type { EventBrief, Plan, PlanTask, VendorItem } from '../types'
 
-const normalize = (value: string) => value.trim().toLocaleLowerCase()
+/**
+ * Normalizes an arbitrary text string for insensitive case and whitespace matching.
+ * @param value - Raw text string.
+ * @returns Trimmed lowercase string.
+ */
+const normalize = (value: string): string => value.trim().toLocaleLowerCase()
 
+/**
+ * Resolves semantic category aliases between different event types and generations.
+ *
+ * @param category - Original category name.
+ * @param event - Target event brief.
+ * @returns Canonicalized category key.
+ */
 function allocationAlias(category: string, event: EventBrief): string {
   const key = normalize(category)
   if (key === 'music & activities') return 'music & entertainment'
@@ -12,7 +24,14 @@ function allocationAlias(category: string, event: EventBrief): string {
   return key
 }
 
-function rebalanceRows(rows: Plan['budget']['allocations'], total: number) {
+/**
+ * Rebalances budget allocations proportionally so their sum matches the target total exactly down to the cent.
+ *
+ * @param rows - Current budget allocation rows.
+ * @param total - Target total budget figure.
+ * @returns Rebalanced allocation rows.
+ */
+function rebalanceRows(rows: Plan['budget']['allocations'], total: number): Plan['budget']['allocations'] {
   const cents = Math.round(total * 100)
   const rawSum = rows.reduce((sum, row) => sum + row.planned, 0)
   let usedCents = 0
@@ -28,7 +47,20 @@ function rebalanceRows(rows: Plan['budget']['allocations'], total: number) {
   })
 }
 
-function mergeAllocations(current: Plan, generated: Plan, event: EventBrief) {
+/**
+ * Merges prior user-entered actual spends with newly generated budget recommendations.
+ * Preserves user custom budget rows while refreshing category planned ratios.
+ *
+ * @param current - Existing active plan.
+ * @param generated - Newly generated candidate plan.
+ * @param event - Updated event brief.
+ * @returns Merged and rebalanced budget allocation array.
+ */
+function mergeAllocations(
+  current: Plan,
+  generated: Plan,
+  event: EventBrief,
+): Plan['budget']['allocations'] {
   const oldByCategory = new Map<string, Plan['budget']['allocations'][number]>()
   for (const row of current.budget.allocations) {
     const key = allocationAlias(row.category, event)
@@ -51,6 +83,17 @@ function mergeAllocations(current: Plan, generated: Plan, event: EventBrief) {
   return rebalanceRows([...defaults, ...customRows], event.budget)
 }
 
+/**
+ * Harmonizes milestone tasks when an event brief date or requirements shift.
+ * Preserves completed milestone statuses, shifts custom dates proportionally,
+ * and maintains dependency graph integrity.
+ *
+ * @param current - Existing active plan.
+ * @param generated - Newly generated candidate plan.
+ * @param previousEventDate - Old event date (YYYY-MM-DD).
+ * @param nextEventDate - New event date (YYYY-MM-DD).
+ * @returns Merged task array with updated due dates and preserved statuses.
+ */
 function mergeTasks(
   current: Plan,
   generated: Plan,
@@ -89,6 +132,14 @@ function mergeTasks(
   }))
 }
 
+/**
+ * Combines existing user vendor negotiations and quotes with new AI checklist suggestions.
+ * Retains custom vendor quotes, vendor contact details, and comparison notes.
+ *
+ * @param current - Existing active plan.
+ * @param generated - Newly generated candidate plan.
+ * @returns Unified vendor list with user edits intact.
+ */
 function mergeVendors(current: Plan, generated: Plan): VendorItem[] {
   const previous = current.vendors.map((vendor) => ({ ...vendor, used: false }))
   const adapted = generated.vendors.map((vendor) => {
@@ -119,6 +170,17 @@ function mergeVendors(current: Plan, generated: Plan): VendorItem[] {
   return [...adapted, ...additionalQuotes]
 }
 
+/**
+ * Non-destructively adapts an existing plan when a user modifies their event parameters.
+ * Rebalances budget allocations to match the new budget ceiling, shifts task timelines
+ * by the date delta, and strictly protects all entered actuals and vendor contracts.
+ *
+ * @param current - The user's active celebration plan.
+ * @param generated - A newly generated plan representing updated parameters.
+ * @param event - The updated event brief.
+ * @param previousEventDate - The original event date string (YYYY-MM-DD).
+ * @returns A fully merged, non-destructive Plan.
+ */
 export function mergeAdaptedPlan(
   current: Plan,
   generated: Plan,

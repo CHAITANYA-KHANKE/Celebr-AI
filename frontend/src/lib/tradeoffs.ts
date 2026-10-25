@@ -1,33 +1,70 @@
 import type { Allocation, PlanningPriority } from '../types'
 
+/**
+ * Represents a simulated or applied monetary delta on a budget line item.
+ */
 export interface AllocationChange {
+  /** Category name of the budget item. */
   category: string
+  /** Previous planned allocation value. */
   from: number
+  /** Updated planned allocation value. */
   to: number
+  /** Net monetary shift (to - from). */
   delta: number
 }
 
+/**
+ * Result scenario produced when calculating priority-based budget cuts.
+ */
 export interface PriorityCutScenario {
+  /** Total projected cost prior to applying trade-offs. */
   projectedBefore: number
+  /** Projected cost after trimming flexible categories. */
   projectedAfter: number
+  /** Target budget ceiling. */
   targetBudget: number
+  /** Remaining unfunded excess after all flexible lines have been trimmed. */
   unfunded: number
+  /** Resulting rebalanced allocations. */
   allocations: Allocation[]
+  /** Detailed breakdown of line-item changes. */
   changes: AllocationChange[]
 }
 
+/**
+ * Simulation output when evaluating an increase to a specific budget line item.
+ */
 export interface AllocationScenario {
+  /** Candidate allocations after simulation. */
   allocations: Allocation[]
+  /** Detailed breakdown of line-item changes. */
   changes: AllocationChange[]
+  /** Amount absorbed from unallocated reserve buffer. */
   bufferUsed: number
+  /** Amount that could not be funded within existing budget boundaries. */
   unfunded: number
+  /** Whether the requested increase is fully fundable without deficit. */
   valid: boolean
 }
 
+/**
+ * Calculates the total projected event cost based on the higher of planned or actual spending per category.
+ *
+ * @param allocations - Array of category budget allocations.
+ * @returns Total projected cost.
+ */
 export function projectedCost(allocations: Allocation[]): number {
   return allocations.reduce((total, item) => total + Math.max(item.planned, item.actual), 0)
 }
 
+/**
+ * Determines whether a budget category string maps to a user planning priority.
+ *
+ * @param category - Category title string.
+ * @param priority - User planning priority value.
+ * @returns True if the category corresponds to the priority.
+ */
 function categoryMatches(category: string, priority: PlanningPriority): boolean {
   const name = category.toLocaleLowerCase()
   if (priority === 'Food & catering') return name.startsWith('food') || name.startsWith('catering')
@@ -44,6 +81,13 @@ function categoryMatches(category: string, priority: PlanningPriority): boolean 
   return name.startsWith('other')
 }
 
+/**
+ * Computes the relative ranking index of a budget category against prioritized interests.
+ *
+ * @param category - Category title string.
+ * @param priorities - User-defined ranking of planning priorities.
+ * @returns Index in priority order (0 being highest priority), or length if unranked.
+ */
 function priorityRank(category: string, priorities: PlanningPriority[]): number {
   const matches = priorities
     .map((priority, index) => (categoryMatches(category, priority) ? index : -1))
@@ -51,6 +95,16 @@ function priorityRank(category: string, priorities: PlanningPriority[]): number 
   return matches.length ? Math.min(...matches) : priorities.length
 }
 
+/**
+ * Generates an index sequence of allocations ordered from most flexible to least flexible.
+ * Strictly shields must-haves and top priorities from reduction.
+ *
+ * @param allocations - Current allocation array.
+ * @param priorities - Ordered priority list.
+ * @param mustHaves - Protected must-have priorities.
+ * @param excludeIndex - Optional index to exclude from reduction candidates.
+ * @returns Array of allocation indices in trimming order.
+ */
 function flexibleOrder(
   allocations: Allocation[],
   priorities: PlanningPriority[],
@@ -70,7 +124,16 @@ function flexibleOrder(
     .map(({ index }) => index)
 }
 
-/** Build a preview that trims uncommitted, lower-priority allocations without touching actuals or must-haves. */
+/**
+ * Generates a non-destructive trade-off proposal that brings projected spend within budget.
+ * Trims uncommitted funds from lower-ranked categories while preserving all incurred actuals and must-haves.
+ *
+ * @param allocations - Current budget allocations.
+ * @param budget - Total event budget ceiling.
+ * @param priorities - User priority ranking.
+ * @param mustHaves - Protected priority categories.
+ * @returns A PriorityCutScenario detailing line-item adjustments and remaining balance.
+ */
 export function proposePriorityCuts(
   allocations: Allocation[],
   budget: number,
@@ -103,7 +166,18 @@ export function proposePriorityCuts(
   }
 }
 
-/** Simulate funding a category increase from unallocated buffer, then flexible uncommitted lines. */
+/**
+ * Simulates funding an allocation increase by first consuming unallocated contingency buffer,
+ * then trimming lower-ranked flexible categories if required.
+ *
+ * @param allocations - Current budget allocations.
+ * @param budget - Total event budget ceiling.
+ * @param categoryIndex - Target category index to increase.
+ * @param requestedAmount - New target allocation amount.
+ * @param priorities - User priority ranking.
+ * @param mustHaves - Protected priority categories.
+ * @returns An AllocationScenario containing adjusted allocations and validity status.
+ */
 export function simulateAllocationChange(
   allocations: Allocation[],
   budget: number,

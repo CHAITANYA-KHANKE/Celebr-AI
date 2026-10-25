@@ -79,6 +79,13 @@ function priorityMatch(category: string, priority: EventBrief['priority_order'][
   return name.startsWith('other')
 }
 
+/**
+ * Generates a deterministic, labeled fallback celebration plan for offline or unconfigured environments.
+ * Uses verified mathematical category ratios adjusted for guest scale, user priorities, and protected must-haves.
+ *
+ * @param event - The input event brief and parameters.
+ * @returns A fully populated Plan structure labeled with mode='demo'.
+ */
 export function makeDemoPlan(event: EventBrief): Plan {
   const budget = Number(event.budget)
   const pressure = Math.max(0, Math.min(1, (event.guest_count - 80) / 270))
@@ -355,11 +362,24 @@ export function makeDemoPlan(event: EventBrief): Plan {
   }
 }
 
+/**
+ * Creates an in-memory or locally-persisted EventRecord wrapper with a unique local UUID and timestamps.
+ *
+ * @param event - The input event brief.
+ * @param plan - The associated celebration plan.
+ * @returns EventRecord instance ready for local storage or client state.
+ */
 export function makeLocalRecord(event: EventBrief, plan: Plan): EventRecord {
   const now = new Date().toISOString()
   return { ...event, plan, id: `local-${crypto.randomUUID()}`, created_at: now, updated_at: now }
 }
 
+/**
+ * Returns a rich, culturally authentic sample event brief for an Indian wedding celebration in Nagpur.
+ * Used for instant live preview and testing without manual form completion.
+ *
+ * @returns Fully populated sample EventBrief.
+ */
 export function sampleEvent(): EventBrief {
   const eventDate = new Date()
   eventDate.setDate(eventDate.getDate() + 120)
