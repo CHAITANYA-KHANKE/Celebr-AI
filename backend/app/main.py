@@ -30,9 +30,10 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title="Celebrai API", version="0.1.0", lifespan=lifespan)
+default_cors = "http://localhost:5173,*" if os.getenv("VERCEL") else "http://localhost:5173"
 origins = [
     origin.strip()
-    for origin in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
+    for origin in os.getenv("CORS_ORIGINS", default_cors).split(",")
     if origin.strip()
 ]
 app.add_middleware(

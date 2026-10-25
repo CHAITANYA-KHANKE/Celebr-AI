@@ -1,40 +1,55 @@
-# Celebrai — Deployment Guide
+# CelebrAI — Deployment Guide
 
-## Status
+## Vercel Deployment (Full-Stack Monorepo)
 
-No cloud deployment was performed from this workspace. The connected Vercel account currently lists no projects; this workspace has no Git repository/remote, and the GitHub connector is unsupported in this conversation. The competition's permitted hosting choices and dashboard fields were not verified; confirm them with the organizer before publishing/submitting.
+CelebrAI is configured for seamless full-stack deployment on **Vercel** with zero extra build steps:
+- **Frontend:** React + TypeScript + Vite (`dist/` output)
+- **Backend API:** FastAPI running as a Vercel Serverless Python function via `api/index.py`
+- **Routing:** Handled automatically by [`vercel.json`](file:///c:/Users/chait/Documents/bc/celerai/vercel.json) (all `/api/*` routes forwarded to FastAPI, all other routes served by Vite).
 
-## Recommended topology
+---
 
-- Static frontend build (`npm run build`) served over HTTPS.
-- FastAPI service served over HTTPS, reachable by the browser at a stable API origin.
-- Managed PostgreSQL database for durable deployed data. Do not deploy private events on an unauthenticated public API.
+### Step 1: Connect GitHub Repository to Vercel
+1. Go to [https://vercel.com/new](https://vercel.com/new).
+2. Under "Import Git Repository", select **`CHAITANYA-KHANKE/Celebr-AI`**.
+3. Choose project name (e.g. `celebr-ai`).
 
-### Vercel preparation (not yet configured)
+---
 
-- Recommended split: deploy the Vite frontend to Vercel and host FastAPI plus PostgreSQL on a backend-capable service, unless you intentionally configure and test a Vercel Python-function deployment. Set `VITE_API_BASE_URL` to the HTTPS API origin at frontend build time and set backend `CORS_ORIGINS` to the exact Vercel origin.
-- Add `GEMINI_API_KEY` only to the backend host's server-side secret store—never as a `VITE_*` value and never in chat. Verify `/api/health` reports AI-ready and complete one actual keyed generation before claiming live Gemini.
-- No Vercel project was available to attach settings to. Create/select a project and choose the backend topology before deployment; the current preview is local only.
-- GitHub push is not complete. No Git remote is configured; the GitHub connector is unsupported in this conversation. Do not call code in this workspace a public repository.
+### Step 2: Project Build & Output Settings
+Vercel will automatically detect `vercel.json` and `vite`. Verify the settings:
+- **Framework Preset:** Vite
+- **Root Directory:** `./`
+- **Build Command:** `npm run build`
+- **Output Directory:** `dist`
+- **Install Command:** `npm install`
 
-## Build and configure
+---
 
-1. Build the frontend: `npm ci && npm run build`.
-2. Run the backend from `backend/`: install `requirements-postgres.txt`, set `DATABASE_URL=postgresql+psycopg://...`, and set `CORS_ORIGINS` to the exact frontend origin(s).
-3. Apply schema before starting the service: `alembic upgrade head`. If adopting a legacy database created by `create_all` without an Alembic revision row, back it up, verify it exactly matches revision `0001_create_events`, then stamp that revision and upgrade to head; never stamp an unverified schema.
-4. Set `VITE_API_BASE_URL=https://your-api-origin.example` at frontend build time. Leave it blank for same-origin hosting/proxying.
-5. For the Challenge 5 GenAI demonstration, add `GEMINI_API_KEY` only to the backend secret manager. Never add the key to the frontend build environment. Verify one real request and keep the demo fallback behavior for provider outages.
-6. Configure the static host or edge proxy to serve `dist/` and point API requests to the backend. Verify `/api/health`, plan generation, create/read/update, and exports from the actual deployed origin.
+### Step 3: Environment Variables on Vercel
+In the Vercel Dashboard project creation screen, open **"Environment Variables"** and add:
 
-## Before public access
+| Key | Value | Description |
+| :--- | :--- | :--- |
+| `GEMINI_API_KEY` | `your_gemini_api_key` | Server-side Gemini API key for live AI plan generation |
+| `GEMINI_MODEL` | `gemini-2.5-flash` | Target Google Gemini model |
+| `DATABASE_URL` | *(Optional)* | PostgreSQL URL (e.g. Supabase / Neon). If omitted, falls back to `/tmp/celebrai.db` |
+| `CORS_ORIGINS` | `*` or `https://your-app.vercel.app` | Allowed CORS origins for browser fetch |
 
-This prototype has no authentication or per-user ownership model. Add identity, authorization, API rate limits, request quotas, HTTPS enforcement, backups, retention/deletion controls, monitoring without sensitive payloads, and a privacy review before hosting real user event data. CORS is not authorization.
+> [!IMPORTANT]
+> Do NOT prefix backend secrets with `VITE_`. Vercel serverless Python functions read standard environment variables (like `GEMINI_API_KEY`), keeping your credentials 100% secure from client browser bundles.
 
-## Operational checks
+---
 
-- Verify all expected browser origins against the production `CORS_ORIGINS` list.
-- Confirm migrations work against an empty PostgreSQL database and upgrades are backed up.
-- Test AI missing-key, provider timeout, malformed output, and provider quota behavior.
-- Confirm event estimates are visibly estimates and no vendor is presented as verified.
-- Run `npm audit`, frontend tests/build and backend tests in CI.
-- Record the deployed URL and a short demo video only after those items are actually completed.
+### Step 4: Click "Deploy"
+1. Click **Deploy**.
+2. Vercel will install dependencies from `package.json` and `requirements.txt`, run `npm run build`, and provision the Python serverless function.
+3. Once finished, Vercel gives you your live production URL: `https://celebr-ai.vercel.app` (or similar).
+
+---
+
+## Verifying Deployment
+- **Frontend:** Open `https://your-deployment.vercel.app/` — verify the landing page and "Create event plan" wizard.
+- **Backend Health:** Open `https://your-deployment.vercel.app/api/health` — should return `{"status":"ok","mode":"ai"}`.
+- **Live AI Generation:** Complete the 4-step wizard with explicit consent and generate a plan — verify AI recommendations and custom themes generate live!
+

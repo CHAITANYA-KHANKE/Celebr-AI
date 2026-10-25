@@ -15,7 +15,10 @@ class Base(DeclarativeBase):
     pass
 
 
-DEFAULT_DB = Path(__file__).resolve().parents[1] / "celebrai.db"
+if os.getenv("VERCEL") and not os.getenv("DATABASE_URL"):
+    DEFAULT_DB = Path("/tmp/celebrai.db")
+else:
+    DEFAULT_DB = Path(__file__).resolve().parents[1] / "celebrai.db"
 DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DEFAULT_DB}")
 _engine_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 engine = create_engine(DATABASE_URL, connect_args=_engine_args, pool_pre_ping=True)
