@@ -2,7 +2,7 @@
 
 ## In-scope controls
 
-- Keep Gemini credentials server-side in environment configuration; `.env.example` contains placeholders only.
+- Keep Gemini credentials server-side in environment configuration; environment files (`.env`) are strictly git-ignored and never committed to source control.
 - The wizard discloses that Celebrai receives the brief and live Gemini forwards event details/notes to Google; explicit confirmation gates submission. Users are cautioned against entering guest names, contact details, or unnecessary sensitive information.
 - Validate and bound all incoming strings, dates, guest counts, budgets, currency, arrays, and nested plan updates with Pydantic.
 - Use SQLAlchemy ORM with bound parameters; never build SQL from user strings. Database checks also enforce positive guest counts and budgets.

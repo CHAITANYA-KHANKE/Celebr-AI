@@ -16,10 +16,10 @@ A wedding-first celebration planner for budget-conscious planners in regional In
 ### 1. Backend
 
 ```bash
-cp .env.example .env
+# Create .env with GEMINI_API_KEY, DATABASE_URL, etc.
 cd backend
 python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\\Scripts\\activate
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements-dev.txt
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```

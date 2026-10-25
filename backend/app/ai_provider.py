@@ -102,22 +102,44 @@ class GeminiProvider:
             if isinstance(parsed.get("theme"), str) and len(parsed["theme"]) > 140:
                 parsed["theme"] = parsed["theme"][:137] + "..."
             if isinstance(parsed.get("recommendations"), list):
+                sanitized_recs = []
                 for rec in parsed["recommendations"]:
                     if isinstance(rec, dict):
-                        if isinstance(rec.get("title"), str) and len(rec["title"]) > 100:
-                            rec["title"] = rec["title"][:97] + "..."
-                        if isinstance(rec.get("description"), str) and len(rec["description"]) > 320:
-                            rec["description"] = rec["description"][:317] + "..."
+                        category = str(rec.get("category", "General"))[:80]
+                        title = str(rec.get("title", ""))
+                        if len(title) > 100:
+                            title = title[:97] + "..."
+                        desc = str(rec.get("description", ""))
+                        if len(desc) > 320:
+                            desc = desc[:317] + "..."
+                        sanitized_recs.append({
+                            "category": category,
+                            "title": title,
+                            "description": desc,
+                        })
+                parsed["recommendations"] = sanitized_recs
             if isinstance(parsed.get("risks"), list):
+                sanitized_risks = []
                 for risk in parsed["risks"]:
                     if isinstance(risk, dict):
-                        if isinstance(risk.get("title"), str) and len(risk["title"]) > 100:
-                            risk["title"] = risk["title"][:97] + "..."
-                        if isinstance(risk.get("mitigation"), str) and len(risk["mitigation"]) > 300:
-                            risk["mitigation"] = risk["mitigation"][:297] + "..."
+                        title = str(risk.get("title", ""))
+                        if len(title) > 100:
+                            title = title[:97] + "..."
+                        mitigation = str(risk.get("mitigation", risk.get("description", "")))
+                        if len(mitigation) > 300:
+                            mitigation = mitigation[:297] + "..."
+                        sanitized_risks.append({
+                            "title": title,
+                            "mitigation": mitigation,
+                        })
+                parsed["risks"] = sanitized_risks
             if isinstance(parsed.get("assumptions"), list):
-                parsed["assumptions"] = [
-                    (a[:140] if isinstance(a, str) and len(a) > 140 else a)
-                    for a in parsed["assumptions"][:8]
-                ]
+                sanitized_assumptions = []
+                for a in parsed["assumptions"][:8]:
+                    if isinstance(a, dict):
+                        text = f"{a.get('title', '')}: {a.get('description', '')}".strip(": ")
+                    else:
+                        text = str(a)
+                    sanitized_assumptions.append(text[:175])
+                parsed["assumptions"] = sanitized_assumptions
         return AIEnhancements.model_validate(parsed)

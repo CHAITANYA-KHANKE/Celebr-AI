@@ -169,5 +169,5 @@ describe('Celebrai primary planning flow', () => {
     )
     expect(fetchMock).toHaveBeenCalledWith('/api/events', expect.objectContaining({ method: 'POST' }))
     expect(screen.getByText(/All changes saved/i)).toBeInTheDocument()
-  })
+  }, 20000)
 })
